@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="مصاريف">
+<meta name="theme-color" content="#2b6cb0">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>مصاريف العائلة</title>
+<style>
+:root {
+  --bg:#f0f4f8; --card:#fff; --text:#2d3748; --muted:#718096; --border:#cbd5e0;
+  --accent:#2b6cb0; --cat:#edf2f7; --totalbg:#ebf8ff; --danger:#e53e3e; --delbg:#fed7d7; --delfg:#c53030;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#111827; --card:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --border:#374151;
+    --accent:#63a4e8; --cat:#273244; --totalbg:#1e3a5f; --danger:#f87171; --delbg:#4a2323; --delfg:#fca5a5;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#111827; --card:#1f2937; --text:#e5e7eb; --muted:#9ca3af; --border:#374151;
+  --accent:#63a4e8; --cat:#273244; --totalbg:#1e3a5f; --danger:#f87171; --delbg:#4a2323; --delfg:#fca5a5;
+  color-scheme:dark;
+}
+html { scroll-padding-top:env(safe-area-inset-top,0px); }
+* { box-sizing:border-box; margin:0; padding:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; }
+body { background:var(--bg); color:var(--text); padding:15px 15px 40px; -webkit-tap-highlight-color:transparent; }
+.container { max-width:600px; margin:auto; }
+h1 { text-align:center; color:var(--accent); margin-bottom:6px; font-size:1.4rem; }
+.subtitle { text-align:center; color:var(--muted); margin-bottom:15px; font-size:.85rem; }
+.card { background:var(--card); border-radius:14px; padding:15px; margin-bottom:15px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
+input, select, button { padding:12px; border-radius:10px; border:1px solid var(--border); font-size:16px; width:100%; }
+input, select { background:var(--card); color:var(--text); margin-bottom:8px; }
+button { background:#2b6cb0; color:#fff; border:none; cursor:pointer; font-weight:bold; margin-bottom:8px; }
+button:active { transform:scale(.98); }
+.btn-green { background:#38a169; } .btn-gray { background:#718096; } .btn-blue { background:#3182ce; }
+.categories { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.cat { background:var(--cat); border-radius:10px; padding:10px; text-align:center; border-right:4px solid #2b6cb0; }
+.cat .name { font-weight:bold; font-size:.9rem; margin-bottom:4px; }
+.cat .amount { font-size:1rem; color:var(--accent); font-weight:bold; }
+.cat[data-cat="الدار"] { border-color:#38a169; } .cat[data-cat="السيارة"] { border-color:#3182ce; }
+.cat[data-cat="الاطفال"] { border-color:#d69e2e; } .cat[data-cat="السبيسة"] { border-color:#805ad5; }
+.cat[data-cat="مصاريف اخرى"] { border-color:#718096; }
+.total { text-align:center; font-size:1.2rem; font-weight:bold; color:var(--accent); padding:12px; background:var(--totalbg); border-radius:10px; margin-bottom:15px; }
+.expense-item { background:var(--cat); padding:12px; border-radius:10px; margin-bottom:8px; border-right:4px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+.expense-info { flex:1; min-width:0; }
+.expense-title { font-weight:bold; font-size:.95rem; overflow-wrap:anywhere; }
+.expense-meta { font-size:.8rem; color:var(--muted); margin-top:4px; }
+.expense-amount { font-weight:bold; color:var(--danger); font-size:1.05rem; direction:ltr; white-space:nowrap; }
+.del-btn { background:var(--delbg); color:var(--delfg); padding:8px 10px; border-radius:8px; font-size:.8rem; width:auto; margin:0; }
+h3 { margin-bottom:10px; color:var(--muted); font-size:1rem; }
+.hint { font-size:.8rem; color:var(--muted); line-height:1.6; margin-bottom:8px; }
+footer { text-align:center; color:var(--muted); font-size:.8rem; padding:10px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>💰 مصاريف العائلة</h1>
+<p class="subtitle">بالدينار التونسي — من إعداد شكري</p>
+
+<div class="card">
+  <input type="text" id="desc" placeholder="وصف المصروف (مثال: خبز، بنزين)">
+  <input type="number" id="amount" placeholder="المبلغ (د.ت)" min="0" step="0.001" inputmode="decimal">
+  <select id="category">
+    <option>الدار</option><option>السيارة</option><option>الاطفال</option><option>السبيسة</option><option>مصاريف اخرى</option>
+  </select>
+  <input type="date" id="date">
+  <button id="addBtn" class="btn-green">➕ إضافة مصروف</button>
+</div>
+
+<div class="total">الإجمالي: <span id="grandTotal">0.000</span> د.ت</div>
+<div class="card"><div class="categories" id="totals"></div></div>
+
+<div class="card">
+  <h3>📋 سجل المصاريف</h3>
+  <div id="list"></div>
+  <div id="emptyMsg" style="text-align:center;color:var(--muted);padding:15px;">لا توجد مصاريف مسجلة</div>
+</div>
+
+<div class="card">
+  <h3>💾 نسخة احتياطية</h3>
+  <p class="hint">البيانات محفوظة على هذا الجهاز فقط. احفظ نسخة احتياطية (JSON) من وقت لآخر، وبها تستطيع نقل البيانات إلى هاتف آخر.</p>
+  <button id="exportJsonBtn" class="btn-green">💾 حفظ نسخة احتياطية (JSON)</button>
+  <button id="exportExcelBtn" class="btn-blue">📊 تصدير إلى Excel (CSV)</button>
+  <button id="importBtn" class="btn-gray">📂 استعادة من ملف JSON</button>
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
+</div>
+
+<footer>© من إعداد شكري</footer>
+</div>
+
+<script>
+const CATEGORIES = ["الدار","السيارة","الاطفال","السبيسة","مصاريف اخرى"];
+const STORAGE_KEY = "family_expenses_tnd_final";
+const $ = id => document.getElementById(id);
+
+let expenses = [];
+try { expenses = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); if (!Array.isArray(expenses)) expenses = []; } catch (e) { expenses = []; }
+
+function todayLocal() {
+  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 10);
+}
+$('date').value = todayLocal();
+
+function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(expenses)); } catch (e) { alert("تعذر حفظ البيانات على هذا الجهاز"); } }
+function fmt(n) { return Number(n).toLocaleString('fr-TN', { minimumFractionDigits:3, maximumFractionDigits:3 }); }
+function escapeHtml(s) { return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+function addExpense() {
+  const desc = $('desc').value.trim();
+  const amount = parseFloat($('amount').value);
+  const category = $('category').value;
+  const date = $('date').value;
+  if (!desc) return alert("أدخل وصف المصروف");
+  if (!amount || amount <= 0) return alert("أدخل مبلغاً صحيحاً");
+  if (!date) return alert("اختر التاريخ");
+  expenses.push({ id: Date.now(), desc, amount, category, date });
+  save();
+  $('desc').value = ''; $('amount').value = '';
+  $('desc').focus();
+  render();
+}
+
+function deleteExpense(id) {
+  if (!confirm("هل أنت متأكد من حذف هذا المصروف؟")) return;
+  expenses = expenses.filter(e => e.id !== id);
+  save(); render();
+}
+
+function render() {
+  const totals = {}; CATEGORIES.forEach(c => totals[c] = 0);
+  expenses.forEach(e => { if (totals[e.category] !== undefined) totals[e.category] += e.amount; });
+  $('grandTotal').textContent = fmt(expenses.reduce((s, e) => s + e.amount, 0));
+  $('totals').innerHTML = CATEGORIES.map(c => `<div class="cat" data-cat="${c}"><div class="name">${c}</div><div class="amount">${fmt(totals[c])} د.ت</div></div>`).join('');
+  const sorted = [...expenses].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
+  if (!sorted.length) { $('list').innerHTML = ''; $('emptyMsg').style.display = 'block'; return; }
+  $('emptyMsg').style.display = 'none';
+  $('list').innerHTML = sorted.map(e => `
+    <div class="expense-item">
+      <div class="expense-info">
+        <div class="expense-title">${escapeHtml(e.desc)}</div>
+        <div class="expense-meta">${escapeHtml(e.category)} • ${escapeHtml(e.date)}</div>
+      </div>
+      <div class="expense-amount">${fmt(e.amount)} د.ت</div>
+      <button class="del-btn" data-id="${e.id}">حذف</button>
+    </div>`).join('');
+}
+$('list').addEventListener('click', e => {
+  const b = e.target.closest('.del-btn'); if (b) deleteExpense(Number(b.dataset.id));
+});
+
+function download(content, mime, name) {
+  const blob = new Blob([content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportJson() {
+  if (!expenses.length) return alert("لا توجد بيانات للتصدير");
+  download(JSON.stringify(expenses, null, 2), 'application/json', `backup_${todayLocal()}.json`);
+}
+
+function exportExcel() {
+  if (!expenses.length) return alert("لا توجد بيانات للتصدير");
+  const sorted = [...expenses].sort((a, b) => a.date.localeCompare(b.date));
+  const rows = sorted.map(e => [e.date, e.desc, e.category, e.amount.toFixed(3)]);
+  rows.push(["", "الإجمالي الكلي", "", expenses.reduce((s, e) => s + e.amount, 0).toFixed(3)]);
+  CATEGORIES.forEach(c => rows.push(["", "إجمالي " + c, c, expenses.filter(e => e.category === c).reduce((s, e) => s + e.amount, 0).toFixed(3)]));
+  const head = ["التاريخ", "الوصف", "الفئة", "المبلغ (د.ت)"];
+  const csv = [head, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\r\n');
+  download("\uFEFF" + csv, 'text/csv;charset=utf-8;', `expenses_${todayLocal()}.csv`);
+}
+
+function importBackup(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) throw new Error("ملف غير صالح");
+      if (!confirm(`سيتم استبدال المصاريف الحالية (${expenses.length}) بـ (${data.length}) مصروف. متابعة؟`)) return;
+      expenses = data.filter(x => x.id && x.desc && typeof x.amount === 'number' && x.category && x.date);
+      save(); render(); alert("✅ تم الاستيراد بنجاح");
+    } catch (err) { alert("❌ ملف غير صالح: " + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+$('addBtn').addEventListener('click', addExpense);
+$('amount').addEventListener('keypress', e => { if (e.key === 'Enter') addExpense(); });
+$('exportExcelBtn').addEventListener('click', exportExcel);
+$('exportJsonBtn').addEventListener('click', exportJson);
+$('importBtn').addEventListener('click', () => $('importFile').click());
+$('importFile').addEventListener('change', e => { if (e.target.files[0]) importBackup(e.target.files[0]); e.target.value = ''; });
+
+/* Offline support */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(() => {}); });
+}
+
+render();
+</script>
+</body>
+</html>
